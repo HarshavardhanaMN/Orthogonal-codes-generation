@@ -1,0 +1,213 @@
+tic
+prompt='Enter the value of code length(n) = ';
+n=input(prompt); % taking code length 'n' from the user as a input
+prompt='Enter the value of code Weight(w) = ';
+w=input(prompt); %taking hamming weight(no. of ones) from the user as a input
+sum=0;
+l=1;  %initialize a variable 'l' which denotes row of dop matrices
+b=1;  %initialize a varibale 'b' which denotes coloumn of edop matrices
+A =[]; % initialize a matrix which stored a first DOP values
+B=[];  %initialize a matrix which stored all edop matrices
+X= [];   %initialize a matrix which stored all dop matrices 
+for i=1:(w-1) % A for loop is used which create a first DOP
+    A(i)=1;    % A(1)=1 ,A(2)=1
+    sum=sum+A(i);
+end
+mat=(n-sum);  % sum=2 ,mat stores a difference between a code length and sum of other values of DOP except last value
+while(A(1) ~= mat )   % A while loop is used which check a condition that a first element of DOP is not equal to mat value
+    sum=0;  
+    for j=1:w-1
+        sum=sum+A(j);
+    end        
+    A(w)=(n-sum); %A(w) gives last value of dop
+    M=max(A);     % initialize a variable 'M' which stores maximum value of first dop
+    while(A(w)>= M ) % A while loop is used which check condition that a last value of DOP is always greater than or equal to Maximum value of DOP
+         X(l,:)=A;   % Now stores the value of DOP in X 
+         l=l+1;      % Here a row of X is updating 
+         for j=1:w   % A for loop is used for updating a row of edop matrix
+            sum=0;
+            k=j;     % initialize a varable which stores a 'j' value
+            for i=1:w-1    % A for loop is used for updating a column of a edop matrix
+                k=mod(k,w); % Now store remainder which comes after dividing 'k' value by 'w' value
+                if(k==0)
+                    k=w;
+                end
+            sum=sum+A(1,k);
+            edop(j,i)=sum;
+            k=k+1;    
+            end
+         end         % Here first edop is created for first dop matrix
+         disp(edop)  % Here edop matrix is displaying
+        B(:,:,b)=edop; % Now the edop value is stored in 'B'
+        b=b+1;         % variable 'b' is updating here
+    break;
+    end    
+    for i=2:mat
+        A(w-1)=A(w-1)+1;
+        sum=0;       
+        for j=1:w-1
+            sum=sum+A(j);
+        end      
+        A(w)=(n-sum);
+        M=max(A);        %initialize a variable 'M' which stores maximum value of first dop
+        while(A(w)>= M)
+            if(A(w)==A(1))
+                break;
+            end
+            X(l,:)=A;    % Now stores the value of DOP in X 
+            l=l+1;
+            edop=ones(w,w-1); % A Identity matrix of size (w)*(w-1) is stored in edop 
+            for j=1:w         % A for loop is used for updating a row of edop matrix
+                sum=0;
+                k=j;
+                for i=1:w-1   % A for loop is used for updating a column of a edop matrix
+                    k=mod(k,w); % Now store remainder which comes after dividing 'k' value by 'w' value
+                    if(k==0)
+                    k=w;
+                    end
+                sum=sum+A(1,k);
+                edop(j,i)=sum;
+                k=k+1;
+                end
+            end           % Here all possible edop is created for all dop matrix
+            disp(edop)    % Here edop matrix is displaying
+       B(:,:,b)=edop;     % Now the edop value is stored in 'B'
+       b=b+1;             % variable 'b' is updating here
+       break;
+        end
+    end
+    c=w-1;    
+    while(A(c)==mat)  % A while loop is used which is checking that 2nd or 3rd element of DOP is equal 
+        if (A(1)==mat)
+            break;
+        end
+        A(c)=1;        % Here 2nd element of DOP is updating 
+        A(c-1)=A(c-1)+1; % Here 1st element of DOP is updating
+        c=c-1;
+    end
+end
+disp(X)  % Here we are displaying all dop values
+for e=1:b-1  
+   for f=1:b-1
+       mat1=B(:,:,e);%  all edop in matrix B  stored in variable mat1
+       mat2=B(:,:,f);%  all edop in matrix B  stored in variable mat2  
+       if(e==f)%if edop element of matrix B at same index of mat1 and mat2 then condition satisfied
+            com=0;%initializing variable com
+            L=[];%initializing matrix L to store value obtained from variable com
+            p=1;%initializing variable p for indexing of matrix L 
+            for i=1:w % i indicate row of mat2
+               for k=1:w % k indicate row of mat1
+                   for j=1:w-1 % j indicate column of mat2
+                       for l=1:w-1 % l indicate column of mat1            
+                            if(mat1(k,l)==mat2(i,j))%if element at provided (row,column) of mat1 & mat2 are equal then nested if condition will be check
+                                if(k==i) %if row of mat1 & mat2 are equal then next nested if condition will be check
+                                    if(l==j) %if column of mat1 & mat2 are equal then value will get updated and next loop will run and no change in com value
+                                        break;
+                                    end
+                                end
+                                com=com+1; %incrementing com variable value
+                            end
+                        end
+                    end
+                    L(p)=com; %storing value of com in array L
+                    p=p+1;
+                    com=0;% updating com value equal to 0
+                end
+            end
+            ac=max(L)+1;%storing  value by adding 1 to maximum value of array L in variable ac
+            C(e,f)=ac;% storing auto correlation value in matrix C
+       end
+        if(e~=f)
+            com=0; %initializing variable com
+            L=[];  %initializing matrix L to store value obtained from variable com
+            p=1;   %initializing variable p for indexing of matrix L 
+            for i=1:w  % i indicate row of mat2
+                for k=1:w   % k indicate row of mat1
+                    for j=1:w-1  % j indicate column of mat2
+                        for l=1:w-1  % l indicate column of mat1 
+                            if(mat1(k,l)==mat2(i,j))  %if element at provided (row,column) of mat1 & mat2 are equal then com value will update
+                                com=com+1; %incrementing com variable value
+                            end
+                        end
+                    end
+                    L(p)=com; %storing value of com in array L
+                    p=p+1;
+                    com=0; % updating com value equal to 0
+                end
+            end
+            display(L)
+            cc=max(L)+1; %storing  value by adding 1 to maximum value of array L in variable cc
+            C(e,f)=cc; % storing cross correlation value in matrix C
+        end
+   end
+end
+disp(C);  % display Matrix 'C'  
+prompt='Enter the value of Auto-correlation Constraint? ';
+av=input(prompt);  % taking autocorrelation constraint from the user as input 
+prompt = 'Enter the value of cross-correlation Constraint? ';
+cv=input(prompt);  % taking crosscorrelation constraint from the user as input
+FN=[];  % Initialize a matrix which stored the code numbers whose autocorrelation is equal to 'av'
+n=1;
+for e=1:b-1  
+	f=e;
+    if(C(e,f)==av)
+        FN(n)=e;
+        n=n+1;			
+    end	
+end
+disp(FN)  % display matrix 'FN'
+sprintf('No. of codes with auto-correlation constraint is: %d ',n-1)
+%NOC is a variable with takes user input, which is number of orthogonal codes in a group
+prompt='Enter the number of orthogonal codes in a group ? ';
+NOC=input(prompt);  % taking number of orthogonal code in a group from the user as a input
+combos=nchoosek(FN,NOC);  % Intialize combos which stores all possible combination
+fcomb=unique(combos,'rows');  %Initialize fcombo which stores all uniques possible combination
+s=size(fcomb,1);      % Initialize a variable 's' which store size of fcombo
+TMP=[];               % Initialize a matrix TMP which store the code numbers according to the NOC
+B=[];                 % Initialize a Matrix 'B' which store all the code number which satisfies auto & cross correlation constraint 
+x=1;
+for h=1:s
+        TMP=combos(h,:);        % Here TMP is storing single group at a time from combos
+        del=nchoosek(TMP,2);    % Initialize a matrix 'del' which stores all possible combination means work as nCr formula
+        fb=unique(del,'rows');  % Initialize a matrix 'fb' which store all unique possible combination
+        a=size(fb,1);           % Initialize a variable 'a' which store the size of fb
+        i=0;
+        count=true; % Initialize a variable 'count'
+        % D=[];
+        % P=[];
+        % m=1;
+        % g=1;
+        for e=1:a            
+          
+            if (C(fb(e,1),fb(e,2))~=cv) 
+                % here 'e' denotes row of matrix 'fb'
+                count=false;
+                % if(count==false)
+                % D(g)=fb(e,1);
+                % g=g+1;
+                % D(g)=fb(e,2);
+                % g=g+1;
+                % end
+                % if any comparision will be wrong then if statement stop
+                % execution and then 'e' value start updation
+            end
+            
+            
+        end
+        % if all comparison become true then it will check condition that
+        % it is true or not and then store the value of TMP in matrix 'B'
+         % P(m,m+1)=intersect(TMP,D);
+         %    if(m>=2)
+         %         count=false;
+         % 
+         %    end  
+        if(count)
+            B(x,:)=TMP; %TMP values are storing in Matrix 'B'
+            x=x+1; % Here the value of x is updating
+        
+        end
+ end
+disp(B); % display Matrix 'B'
+q=size(B,1); % Initialize a variable 'q' which store the size of 'B' 
+sprintf('Total Number of possible codes is: %d ',q)    % Here 'q' value is printing
+toc
